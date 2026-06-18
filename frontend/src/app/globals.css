@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050816;
+  --foreground: #f5f7fb;
+  --panel: rgba(7, 12, 24, 0.68);
+  --border: rgba(255, 255, 255, 0.08);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-bricolage);
+  --font-mono: var(--font-plex-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-bricolage), sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 120px 120px;
+  mask-image: radial-gradient(circle at center, black 35%, transparent 80%);
+  opacity: 0.28;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.leaflet-container {
+  background: #09111f;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.96);
+  color: #0f172a;
+}
+
+.leaflet-control-attribution {
+  background: rgba(5, 8, 22, 0.7) !important;
+  color: rgba(226, 232, 240, 0.9) !important;
+}
+
+.leaflet-control-attribution a {
+  color: rgba(125, 211, 252, 0.95) !important;
+}
