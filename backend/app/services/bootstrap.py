@@ -19,8 +19,16 @@ async def create_tables() -> None:
     settings = get_settings()
     if not settings.auto_create_tables:
         return
-    async with engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
+    try:
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
+    except Exception as exc:
+        error_msg = str(exc)
+        if "already exists" in error_msg.lower() or "duplicate key" in error_msg.lower() or "UniqueViolationError" in error_msg:
+            print(f"[create_tables] tables already exist — skipping ({exc})")
+        else:
+            print(f"[create_tables] unexpected error: {exc}")
+            raise
 
 
 async def sync_loop(app) -> None:
