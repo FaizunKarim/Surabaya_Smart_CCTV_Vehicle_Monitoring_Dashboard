@@ -1,3 +1,12 @@
+---
+title: Cctv Surabaya Db
+emoji: 🌍
+colorFrom: blue
+colorTo: pink
+sdk: docker
+pinned: false
+---
+
 # Backend Deployment Guide
 
 Backend ini dirancang sebagai service terpisah dari frontend. Frontend cukup mengetahui satu variabel:
