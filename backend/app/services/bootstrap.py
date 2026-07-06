@@ -38,7 +38,9 @@ async def sync_loop(app) -> None:
             async with SessionLocal() as session:
                 app.state.last_sync = await sync_cctv_catalog(session)
         except Exception as exc:
+            import traceback
             print(f"[sync-loop] failed: {exc}")
+            traceback.print_exc()
         await asyncio.sleep(settings.sync_interval_seconds)
 
 

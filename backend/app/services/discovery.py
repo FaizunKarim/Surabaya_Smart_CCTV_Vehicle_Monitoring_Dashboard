@@ -1,7 +1,8 @@
 from datetime import UTC, datetime
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import select, case
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -56,42 +57,49 @@ async def sync_cctv_catalog(session: AsyncSession) -> datetime:
         active_ids.add(cctv_id)
         status = normalize_status(status_map.get(cctv_id))
         stream_url = f"{settings.surabaya_base_url}/hls/{cctv_id}/stream.m3u8"
-        camera = existing.get(cctv_id)
+        
+        stmt = insert(CCTVCamera).values(
+            cctv_id=cctv_id,
+            no=index,
+            source_db_id=int(item["db_id"]),
+            name=str(item["name"]).strip(),
+            area=str(item.get("area", "UNKNOWN")).strip() or "UNKNOWN",
+            latitude=float(item["lat"]),
+            longitude=float(item["lng"]),
+            stream_url=stream_url,
+            status=status,
+            last_seen_at=now,
+            last_status_change=now,
+            line_start_x_ratio=settings.line_start_x_ratio,
+            line_start_y_ratio=settings.line_start_y_ratio,
+            line_end_x_ratio=settings.line_end_x_ratio,
+            line_end_y_ratio=settings.line_end_y_ratio,
+            updated_at=now
+        )
+        
+        # In PostgreSQL, we can use ON CONFLICT DO UPDATE
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['cctv_id'],
+            set_={
+                'no': stmt.excluded.no,
+                'source_db_id': stmt.excluded.source_db_id,
+                'name': stmt.excluded.name,
+                'area': stmt.excluded.area,
+                'latitude': stmt.excluded.latitude,
+                'longitude': stmt.excluded.longitude,
+                'stream_url': stmt.excluded.stream_url,
+                'status': stmt.excluded.status,
+                'last_seen_at': stmt.excluded.last_seen_at,
+                'updated_at': stmt.excluded.updated_at,
+                'last_status_change': case(
+                    (CCTVCamera.status != stmt.excluded.status, stmt.excluded.last_status_change),
+                    else_=CCTVCamera.last_status_change
+                )
+            }
+        )
+        await session.execute(stmt)
 
-        if camera is None:
-            camera = CCTVCamera(
-                cctv_id=cctv_id,
-                no=index,
-                source_db_id=int(item["db_id"]),
-                name=str(item["name"]).strip(),
-                area=str(item.get("area", "UNKNOWN")).strip() or "UNKNOWN",
-                latitude=float(item["lat"]),
-                longitude=float(item["lng"]),
-                stream_url=stream_url,
-                status=status,
-                last_seen_at=now,
-                last_status_change=now,
-                line_start_x_ratio=settings.line_start_x_ratio,
-                line_start_y_ratio=settings.line_start_y_ratio,
-                line_end_x_ratio=settings.line_end_x_ratio,
-                line_end_y_ratio=settings.line_end_y_ratio,
-            )
-            session.add(camera)
-            continue
-
-        if camera.status != status:
-            camera.last_status_change = now
-
-        camera.no = index
-        camera.source_db_id = int(item["db_id"])
-        camera.name = str(item["name"]).strip()
-        camera.area = str(item.get("area", "UNKNOWN")).strip() or "UNKNOWN"
-        camera.latitude = float(item["lat"])
-        camera.longitude = float(item["lng"])
-        camera.stream_url = stream_url
-        camera.status = status
-        camera.last_seen_at = now
-
+    # Note: For existing items, we just need to delete those not in active_ids
     for cctv_id, camera in existing.items():
         if cctv_id not in active_ids:
             await session.delete(camera)
