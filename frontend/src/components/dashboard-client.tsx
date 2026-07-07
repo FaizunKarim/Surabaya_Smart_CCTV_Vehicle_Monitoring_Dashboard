@@ -188,11 +188,8 @@ export function DashboardClient() {
                 Surabaya Smart Mobility Grid
               </p>
               <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-tight text-white md:text-6xl">
-                Dashboard monitoring CCTV kendaraan Surabaya dengan peta live, status real-time, dan analitik AI.
+                Dashboard monitoring CCTV kendaraan Surabaya.
               </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300 md:text-base">
-                Menggabungkan discovery 444 CCTV publik, stream HLS, sinkronisasi 5 menit, serta pipeline kendaraan berbasis YOLO + ByteTrack yang siap diaktifkan melalui backend FastAPI.
-              </p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:w-[520px]">
